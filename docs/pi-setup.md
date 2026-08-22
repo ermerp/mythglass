@@ -89,12 +89,17 @@ Ende sagt dir das Skript, wie es weitergeht.
 ```
 
 Legt einen Autostart-Eintrag an und schaltet den Bildschirmschoner ab. Nach dem nächsten Neustart
-startet der Pi direkt in die Anzeige. Ohne Neustart ausprobieren — je nach Pi-OS-Stand heißt das
-Programm `chromium` oder `chromium-browser`, beenden mit `Alt`+`F4`:
+startet der Pi direkt in die Anzeige. Ohne Neustart ausprobieren, beenden mit `Alt`+`F4`:
 
 ```bash
-chromium --kiosk --password-store=basic http://localhost/stage/main
+./scripts/kiosk-start.sh
 ```
+
+**Der Starter wartet, bis die Anwendung antwortet.** Beim Hochfahren ist der Desktop schneller fertig
+als Docker und die Anwendung darin; ohne dieses Warten würde Chromium ins Leere laufen und den
+Spielern eine Fehlerseite zeigen, bevor es sich von selbst fängt. Antwortet die Anwendung nach zwei
+Minuten immer noch nicht, startet der Browser trotzdem — eine Fehlerseite ist immer noch besser als
+ein leerer Bildschirm ohne jeden Hinweis.
 
 > `--password-store=basic` gehört dazu: Ohne diesen Schalter legt Chromium den Schlüssel, mit dem es
 > Cookies verschlüsselt, im GNOME-Keyring ab. Der ist nach dem automatischen Login nicht entsperrt,
@@ -111,6 +116,7 @@ versehentlich herausklicken. Drei Wege zurück:
 |---|---|
 | Tastatur am Pi | `Alt`+`F4` schließt das Fenster |
 | Von einem anderen Rechner | `ssh pi@mythglass.local` und dann `pkill -f chromium` |
+| Startet gerade noch nicht | Wartet er noch auf die Anwendung, hilft `pkill -f kiosk-start` |
 | Beim nächsten Start gar nicht erst | `mv ~/.config/autostart/mythglass-main.desktop ~/` |
 
 Den Autostart wieder einschalten: `./scripts/setup-kiosk.sh` erneut aufrufen.
@@ -282,7 +288,9 @@ Anmeldung. Einmal ab- und wieder anmelden, dann `./scripts/install.sh` erneut la
 „verbunden" steht. Wenn nicht, läuft der Browser auf dem Pi nicht oder zeigt die falsche Adresse.
 
 **Der Kiosk zeigt ERR_CONNECTION_REFUSED.** Der Browser ist da, die Anwendung nicht — jedenfalls
-nicht unter der Adresse, die der Browser aufruft. Nachsehen, wo tatsächlich etwas lauscht:
+nicht unter der Adresse, die der Browser aufruft. Beim Hochfahren sollte das nicht mehr vorkommen,
+seit der Starter auf die Anwendung wartet; bleibt es stehen, läuft sie wirklich nicht oder auf einem
+anderen Port. Nachsehen, wo tatsächlich etwas lauscht:
 
 ```bash
 cd ~/mythglass
