@@ -93,8 +93,14 @@ startet der Pi direkt in die Anzeige. Ohne Neustart ausprobieren — je nach Pi-
 Programm `chromium` oder `chromium-browser`, beenden mit `Alt`+`F4`:
 
 ```bash
-chromium --kiosk http://localhost/stage/main
+chromium --kiosk --password-store=basic http://localhost/stage/main
 ```
+
+> `--password-store=basic` gehört dazu: Ohne diesen Schalter legt Chromium den Schlüssel, mit dem es
+> Cookies verschlüsselt, im GNOME-Keyring ab. Der ist nach dem automatischen Login nicht entsperrt,
+> also erscheint beim Start ein Passwortdialog — und der Pi bleibt daran hängen, statt die Anzeige zu
+> zeigen. Diese Anzeige meldet sich nirgends an und speichert keine Passwörter; der Keyring hat hier
+> nichts zu tun. Das Skript setzt den Schalter selbst.
 
 ## 6. Bilder ablegen
 
@@ -189,6 +195,9 @@ hat, und tut nichts, wenn du bereits auf dem neuesten Stand bist.
 des Projektordners. Der Kiosk-Browser auf dem Pi verbindet sich nach dem Neustart der Anwendung von
 selbst wieder; dort muss niemand etwas anfassen.
 
+Eine Ausnahme: Ändert sich, wie der Kiosk-Browser gestartet wird, muss `./scripts/setup-kiosk.sh`
+einmal neu laufen. Das Update sagt nichts darüber — im Zweifel schadet es nie, es erneut aufzurufen.
+
 Der Build dauert deutlich kürzer als beim ersten Mal, weil der Gradle-Cache erhalten bleibt.
 
 ---
@@ -250,6 +259,19 @@ Anmeldung. Einmal ab- und wieder anmelden, dann `./scripts/install.sh` erneut la
 **Der Autostart greift nicht.** Prüfe zuerst mit dem Handbefehl aus Schritt 5, ob die Anzeige
 überhaupt funktioniert. Dann weißt du, ob das Problem bei der Anwendung liegt oder nur beim Starten
 des Browsers.
+
+**Beim Start des Browsers wird nach einem Passwort gefragt (Keyring).** Der Pi bleibt dann am
+Anmeldedialog hängen, statt die Anzeige zu zeigen. Ursache ist der GNOME-Keyring; die Lösung ist der
+Schalter `--password-store=basic`, den `setup-kiosk.sh` setzt. Nach einem Update also einmal:
+
+```bash
+cd ~/mythglass && ./scripts/setup-kiosk.sh
+```
+
+Fragt danach immer noch etwas nach einem Passwort, kommt der Dialog nicht von Chromium, sondern vom
+Anmeldevorgang selbst. Dann in `seahorse` („Passwörter und Verschlüsselung") beim Schlüsselbund
+_Anmeldung_ das Passwort auf leer setzen — bei einem Gerät, das automatisch hochfährt und sich
+nirgends anmeldet, ist das vertretbar.
 
 **Die Steuerung meldet «Keine Verbindung zum Server».** Der Container läuft nicht, oder das Handy ist
 in einem anderen Netz. `docker compose ps` und die WLAN-Einstellungen des Handys prüfen.

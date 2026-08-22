@@ -33,12 +33,31 @@ fi
 
 mkdir -p "${AUTOSTART_DIR}"
 
+# Aufrufparameter fuer den Kiosk-Browser.
+#
+# --password-store=basic ist der wichtigste davon: Ohne ihn legt Chromium den Schluessel, mit dem es
+# Cookies verschluesselt, im GNOME-Keyring ab. Der ist nach dem automatischen Login nicht entsperrt,
+# also erscheint beim Start ein Passwortdialog — und der Pi bleibt daran haengen, statt die Anzeige
+# zu zeigen. Diese Anzeige meldet sich nirgends an und speichert keine Passwoerter; der Keyring hat
+# hier nichts zu tun.
+CHROMIUM_FLAGS=(
+  --kiosk
+  --password-store=basic
+  --noerrdialogs
+  --disable-infobars
+  --disable-session-crashed-bubble
+  --disable-features=Translate
+  --check-for-update-interval=31536000
+  # Vorsorglich fuer spaeter: Ohne das darf eine Seite ohne Zutun des Benutzers keinen Ton abspielen.
+  --autoplay-policy=no-user-gesture-required
+)
+
 cat > "${DESKTOP_FILE}" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=Mythglass (${SURFACE_ID})
 Comment=Vollbildanzeige fuer die Surface ${SURFACE_ID}
-Exec=${CHROMIUM} --kiosk --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-features=Translate --check-for-update-interval=31536000 --autoplay-policy=no-user-gesture-required ${URL}
+Exec=${CHROMIUM} ${CHROMIUM_FLAGS[*]} ${URL}
 X-GNOME-Autostart-enabled=true
 DESKTOP
 
@@ -57,4 +76,4 @@ fi
 echo
 echo "Fertig. Nach dem naechsten Neustart startet der Pi direkt in die Anzeige."
 echo "Sofort ausprobieren, ohne Neustart:"
-echo "  ${CHROMIUM} --kiosk ${URL}"
+echo "  ${CHROMIUM} ${CHROMIUM_FLAGS[*]} ${URL}"
