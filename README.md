@@ -94,6 +94,9 @@ Die E2E-Tests starten das gebaute Jar selbst, legen sich eine eigene Bibliothek 
 Monitor und Handy als zwei getrennte Browser-Kontexte. Damit ist genau der Stand geprüft, der später
 im Container landet.
 
+Sie laufen dabei auf Port 8099 und benutzen nie einen bereits laufenden Server mit — ein `bootRun`
+auf 8080 darf also nebenher weiterlaufen, ohne das Ergebnis zu verfälschen.
+
 Einmalig vorab: `cd e2e && npm install && npx playwright install chromium`.
 
 ### 3. Container — nur wenn es um den Pi geht
