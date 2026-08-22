@@ -252,10 +252,17 @@ selbst wieder abgleicht.
 | Aktualisieren | `./scripts/update.sh` |
 | Protokoll ansehen | `docker compose logs -f mythglass` |
 | Neu starten | `docker compose restart` |
+| Nach Änderung an `compose.yaml` | `docker compose up -d --build` (siehe unten) |
 | Anhalten | `docker compose down` |
 | Vorschaubilder verwerfen | `rm -rf /srv/mythglass/cache/thumbs` und neu einlesen |
 
 Alle `docker compose`-Befehle müssen aus `~/mythglass` heraus laufen — dort liegt die `compose.yaml`.
+
+> **`restart` ist nicht dasselbe wie `up -d`.** `docker compose restart` startet den vorhandenen
+> Container neu und lässt seine Konfiguration unangetastet — eine geänderte Portzuordnung oder ein
+> geänderter Ordner bleiben dabei außen vor. Erst `docker compose up -d` vergleicht mit der
+> `compose.yaml` und erzeugt den Container neu, wenn nötig. Wer nach einem `git pull` nur `restart`
+> aufruft, läuft mit der alten Konfiguration weiter. `./scripts/update.sh` macht es richtig.
 
 # Wenn etwas nicht funktioniert
 
