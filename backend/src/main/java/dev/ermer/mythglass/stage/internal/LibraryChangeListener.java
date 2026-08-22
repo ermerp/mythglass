@@ -24,6 +24,6 @@ class LibraryChangeListener {
 
     @EventListener
     void onLibraryRescanned(LibraryRescanned event) {
-        stage.dropScenesWithMissingAssets();
+        stage.onLibraryChanged();
     }
 }

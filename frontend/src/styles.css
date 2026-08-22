@@ -52,6 +52,41 @@ body {
   height: 100%;
 }
 
+/*
+ * Das eingebaute Ruhebild. Sehr dunkel gehalten — der Monitor steht in einem Raum im Halbdunkel und
+ * soll ihn nicht erhellen, solange nichts gezeigt wird.
+ */
+.stage-idle {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 450ms ease-in-out;
+}
+
+.idle-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  color: #6a5a34;
+}
+
+.idle-mark {
+  width: min(22vh, 22vw);
+  height: min(22vh, 22vw);
+}
+
+.idle-name {
+  margin: 0;
+  font-size: min(3.2vh, 3.2vw);
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: #7a6840;
+}
+
 .stage-notice {
   position: absolute;
   inset: auto 0 0 0;

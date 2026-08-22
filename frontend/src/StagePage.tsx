@@ -26,7 +26,10 @@ export function StagePage({ surfaceId }: { surfaceId: string }) {
   const surface = state?.surfaces.find((candidate) => candidate.id === surfaceId);
   const scene = surface?.scene;
 
-  const targetUrl = scene?.type === "image" ? imageUrl(scene.assetId) : null;
+  // Ist nichts geschaltet, tritt das Ruhebild an die Stelle des Bildes. Für die Überblendung unten
+  // ist das kein Sonderfall, sondern einfach eine andere Adresse.
+  const idleUrl = state?.idleAssetId != null ? imageUrl(state.idleAssetId) : null;
+  const targetUrl = scene?.type === "image" ? imageUrl(scene.assetId) : idleUrl;
   const targetFit: Fit = scene?.type === "image" ? scene.fit : "CONTAIN";
 
   // Zwei übereinanderliegende Ebenen: Die neue wird eingeblendet, während die alte verschwindet.
@@ -64,9 +67,9 @@ export function StagePage({ surfaceId }: { surfaceId: string }) {
     // das Bild noch über das Netz kommt — am Spieltisch sieht das nach einem Fehler aus.
     const preload = new Image();
     preload.addEventListener("load", () => swapTo({ url: targetUrl, fit: targetFit }));
-    // Bei einem Ladefehler auf Schwarz gehen statt das alte Bild stehen zu lassen: Der Spielleiter
-    // hat etwas anderes angeordnet. Und Schwarz ist auf einem Monitor, den die Spieler sehen,
-    // allemal besser als ein Symbol für ein kaputtes Bild.
+    // Bei einem Ladefehler auf das Ruhebild zurückfallen statt das alte Bild stehen zu lassen: Der
+    // Spielleiter hat etwas anderes angeordnet. Und ein Symbol für ein kaputtes Bild ist das
+    // Letzte, was die Spieler sehen sollen.
     preload.addEventListener("error", () =>
       swapTo({ url: targetUrl, fit: targetFit, broken: true }),
     );
@@ -78,9 +81,19 @@ export function StagePage({ surfaceId }: { surfaceId: string }) {
   }, [targetUrl, targetFit, front, layers]);
 
   const unknownSurface = state !== null && surface === undefined;
+  const showingImage = layers[front].url !== null && layers[front].broken !== true;
 
   return (
     <div className="stage">
+      {/*
+        Liegt kein Ruhebild in der Bibliothek, tritt dieses eingebaute an seine Stelle. Es liegt
+        hinter den Bildebenen und wird ausgeblendet, sobald eine davon etwas zeigt — sonst stünde es
+        bei «Ganz zeigen» in den schwarzen Rändern.
+      */}
+      <div className="stage-idle" style={{ opacity: showingImage ? 0 : 1 }} aria-hidden={showingImage}>
+        <IdleScreen />
+      </div>
+
       {layers.map((layer, index) => (
         <div
           key={index}
@@ -105,6 +118,37 @@ export function StagePage({ surfaceId }: { surfaceId: string }) {
           In <code>application.yaml</code> unter <code>mythglass.stage.surfaces</code> eintragen.
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Das eingebaute Ruhebild.
+ *
+ * Bewusst sehr dunkel gehalten: Der Monitor steht in einem Raum im Halbdunkel und soll ihn nicht
+ * erhellen, während nichts gezeigt wird. Es geht nur darum zu zeigen, dass alles läuft — ein
+ * schwarzer Bildschirm sieht aus wie ein Defekt.
+ *
+ * Als Zeichnung statt als Bilddatei, damit es in jeder Auflösung scharf bleibt und nichts
+ * mitausgeliefert werden muss.
+ */
+function IdleScreen() {
+  return (
+    <div className="idle-screen">
+      <svg className="idle-mark" viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="46" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.55" />
+        <circle cx="60" cy="60" r="34" fill="none" stroke="currentColor" strokeWidth="0.6" opacity="0.35" />
+        <path
+          d="M60 22 L92 46 L80 88 L40 88 L28 46 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+          opacity="0.7"
+        />
+        <path d="M60 22 L60 88 M28 46 L92 46" stroke="currentColor" strokeWidth="0.6" opacity="0.3" />
+      </svg>
+      <p className="idle-name">Mythglass</p>
     </div>
   );
 }

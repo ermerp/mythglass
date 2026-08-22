@@ -6,6 +6,7 @@ import dev.ermer.mythglass.library.LibraryRescanned;
 import dev.ermer.mythglass.library.LibraryService;
 import jakarta.annotation.PostConstruct;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Service;
 class DefaultLibraryService implements LibraryService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultLibraryService.class);
+
+    /** Muss zum Namen passen, den der Scanner für Bilder ohne Unterordner vergibt. */
+    private static final String ROOT_FOLDER = "Allgemein";
 
     private final LibraryScanner scanner;
     private final ThumbnailService thumbnails;
@@ -48,6 +52,15 @@ class DefaultLibraryService implements LibraryService {
     @Override
     public Optional<Asset> find(String assetId) {
         return Optional.ofNullable(index.get().byId().get(assetId));
+    }
+
+    @Override
+    public Optional<Asset> findByDisplayName(String displayName) {
+        LibraryIndex current = index.get();
+        Comparator<Asset> rootFirst = Comparator.comparing(asset -> !ROOT_FOLDER.equals(asset.folder()));
+        return current.byId().values().stream()
+                .filter(asset -> asset.displayName().equalsIgnoreCase(displayName))
+                .min(rootFirst);
     }
 
     @Override

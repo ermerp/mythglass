@@ -213,3 +213,28 @@ test("Geänderte Einpassung wirkt sofort auf das laufende Bild", async ({ tisch 
     )
     .toBe("cover");
 });
+
+/**
+ * Ein schwarzer Monitor sieht aus, als sei etwas kaputt. Solange nichts geschaltet ist, zeigt die
+ * Anzeige deshalb ein Ruhebild — hier das eingebaute, weil die Testbibliothek kein eigenes enthält.
+ */
+test("Ohne geschaltetes Bild zeigt die Anzeige das Ruhebild", async ({ tisch }) => {
+  const stage = await tisch.monitor();
+
+  await expect(stage.locator(".idle-screen")).toBeVisible();
+  await expect(stage.locator(".stage-idle")).toHaveCSS("opacity", "1");
+});
+
+test("Ein geschaltetes Bild verdeckt das Ruhebild und gibt es danach wieder frei", async ({ tisch }) => {
+  const stage = await tisch.monitor();
+  const control = await tisch.handy();
+
+  await control.getByRole("button", { name: /Gorak/ }).click();
+  await expect(stage.locator(".stage-layer img")).toBeVisible();
+  // Sonst stünde das Ruhebild bei "Ganz zeigen" in den schwarzen Rändern.
+  await expect.poll(() => stage.locator(".stage-idle").evaluate((e) => getComputedStyle(e).opacity)).toBe("0");
+
+  await control.getByRole("button", { name: "Schwarz" }).click();
+
+  await expect.poll(() => stage.locator(".stage-idle").evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+});

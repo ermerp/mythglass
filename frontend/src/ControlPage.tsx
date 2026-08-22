@@ -66,6 +66,10 @@ export function ControlPage() {
   }
 
   const shownAssetId = surface.scene.type === "image" ? surface.scene.assetId : null;
+  // Was tatsächlich auf dem Monitor steht: das geschaltete Bild, sonst das Ruhebild. Die Vorschau
+  // soll die Wahrheit zeigen, damit sich niemand umdrehen muss.
+  const idleAssetId = state?.idleAssetId ?? null;
+  const previewAssetId = shownAssetId ?? idleAssetId;
 
   /**
    * Die Einpassung gilt für den nächsten Griff — läuft aber gerade ein Bild, wird sie sofort darauf
@@ -110,15 +114,15 @@ export function ControlPage() {
 
         <div className="now-showing">
           <div className="now-showing-preview">
-            {shownAssetId !== null ? (
-              <img src={thumbnailUrl(shownAssetId)} alt="" />
+            {previewAssetId !== null ? (
+              <img src={thumbnailUrl(previewAssetId)} alt="" />
             ) : (
-              <span className="now-showing-empty">schwarz</span>
+              <span className="now-showing-empty">Ruhe</span>
             )}
           </div>
           <div className="now-showing-text">
             <span className="label">Auf dem Monitor</span>
-            <strong>{describe(surface, library)}</strong>
+            <strong>{describe(surface, library, idleAssetId !== null)}</strong>
           </div>
           <button
             type="button"
@@ -220,9 +224,9 @@ function ConnectionBadge({ online, surface }: { online: boolean; surface: Surfac
   );
 }
 
-function describe(surface: SurfaceState, library: Library | null): string {
+function describe(surface: SurfaceState, library: Library | null, hasIdleImage: boolean): string {
   if (surface.scene.type === "blank") {
-    return "Nichts";
+    return hasIdleImage ? "Ruhebild" : "Nichts";
   }
   const assetId = surface.scene.assetId;
   const asset = library?.folders

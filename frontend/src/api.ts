@@ -24,6 +24,11 @@ export interface SurfaceState {
 
 export interface StageState {
   surfaces: SurfaceState[];
+  /**
+   * Bild, das eine Surface zeigt, solange nichts geschaltet ist; `null`, wenn die Bibliothek kein
+   * passendes enthält — dann tritt das eingebaute Ruhebild an seine Stelle.
+   */
+  idleAssetId: string | null;
 }
 
 export interface Asset {

@@ -50,6 +50,9 @@ class MythglassApiTest {
         writePng(LIBRARY.resolve("Orte/Taverne.png"), 1920, 1080);
         writePng(LIBRARY.resolve("Titelbild.png"), 800, 600);
         writePng(LIBRARY.resolve(".versteckt/Geheim.png"), 100, 100);
+        // Gleicher Anzeigename wie das Ruhebild, aber in einem Unterordner: Der Wurzelordner hat Vorrang.
+        writePng(LIBRARY.resolve("Orte/Titel.png"), 300, 200);
+        writePng(LIBRARY.resolve("Titel.png"), 640, 360);
         write(LIBRARY.resolve("Notizen.txt"), "kein Bild");
     }
 
@@ -62,6 +65,9 @@ class MythglassApiTest {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    dev.ermer.mythglass.library.LibraryService library;
+
     @BeforeEach
     void resetSurface() throws Exception {
         mockMvc.perform(post("/api/surfaces/main/blank")).andExpect(status().isOk());
@@ -73,13 +79,15 @@ class MythglassApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.folders.length()").value(3))
                 .andExpect(jsonPath("$.folders[0].name").value("Allgemein"))
-                .andExpect(jsonPath("$.folders[0].assets[0].name").value("Titelbild"))
+                .andExpect(jsonPath("$.folders[0].assets[0].name").value("Titel"))
+                .andExpect(jsonPath("$.folders[0].assets[1].name").value("Titelbild"))
                 .andExpect(jsonPath("$.folders[1].name").value("NPCs"))
                 .andExpect(jsonPath("$.folders[1].assets.length()").value(2))
                 // Sortiert nach Namen, nicht nach Fundreihenfolge im Dateisystem.
                 .andExpect(jsonPath("$.folders[1].assets[0].name").value("Elenya"))
                 .andExpect(jsonPath("$.folders[1].assets[1].name").value("Gorak der Wirt"))
-                .andExpect(jsonPath("$.folders[2].name").value("Orte"));
+                .andExpect(jsonPath("$.folders[2].name").value("Orte"))
+                .andExpect(jsonPath("$.folders[2].assets.length()").value(2));
     }
 
     @Test
@@ -207,9 +215,36 @@ class MythglassApiTest {
         Files.delete(temporaryImage);
         mockMvc.perform(post("/api/library/rescan"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assetCount").value(4));
+                .andExpect(jsonPath("$.assetCount").value(6));
 
         mockMvc.perform(get("/api/surfaces")).andExpect(jsonPath("$[0].scene.type").value("blank"));
+    }
+
+    /**
+     * Das Ruhebild wird über den Dateinamen gefunden, nicht über eine ID — der Spielleiter soll
+     * einfach eine Datei ablegen können. Bei gleichem Namen gewinnt der Wurzelordner.
+     */
+    @Test
+    void idleImageIsResolvedByFileNameWithRootFolderWinning() throws Exception {
+        String rootTitle = assetIdIn("Allgemein", "Titel");
+        String nestedTitle = assetIdIn("Orte", "Titel");
+        assertThat(rootTitle).isNotEqualTo(nestedTitle);
+
+        assertThat(library.findByDisplayName("Titel")).hasValueSatisfying(asset ->
+                assertThat(asset.id()).isEqualTo(rootTitle));
+        assertThat(library.findByDisplayName("titel")).as("Groß- und Kleinschreibung egal")
+                .hasValueSatisfying(asset -> assertThat(asset.id()).isEqualTo(rootTitle));
+        assertThat(library.findByDisplayName("gibtesnicht")).isEmpty();
+    }
+
+    private String assetIdIn(String folder, String displayName) throws Exception {
+        String body = mockMvc.perform(get("/api/library")).andReturn().getResponse().getContentAsString();
+        int folderAt = body.indexOf("\"name\":\"" + folder + "\"");
+        assertThat(folderAt).as("Ordner '%s'", folder).isGreaterThan(-1);
+        int nameAt = body.indexOf("\"name\":\"" + displayName + "\"", folderAt);
+        assertThat(nameAt).as("Bild '%s' in '%s'", displayName, folder).isGreaterThan(-1);
+        int idAt = body.lastIndexOf("\"id\":\"", nameAt) + "\"id\":\"".length();
+        return body.substring(idAt, body.indexOf('"', idAt));
     }
 
     private String anyAssetId() throws Exception {
