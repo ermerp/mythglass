@@ -109,11 +109,12 @@ Einmalig vorab: `cd e2e && npm install && npx playwright install chromium`.
 ### 3. Container — nur wenn es um den Pi geht
 
 ```bash
-MYTHGLASS_LIBRARY=./data/library MYTHGLASS_CACHE=./data/cache docker compose up --build
+MYTHGLASS_LIBRARY=./data/library MYTHGLASS_CACHE=./data/cache MYTHGLASS_PORT=8080 docker compose up --build
 ```
 
-Dasselbe Compose-File läuft auf dem Pi ohne die beiden Variablen; die Vorgaben zeigen dort auf
-`/srv/mythglass`.
+Dasselbe Compose-File läuft auf dem Pi ohne diese Variablen: Die Bibliothek liegt dort unter
+`/srv/mythglass`, und der Container veröffentlicht Port 80 — damit am Handy `http://mythglass.local`
+ohne Portangabe genügt.
 
 ### Vom Handy aus ausprobieren
 
@@ -140,6 +141,11 @@ erreichbar, ohne Portweiterleitung.
 | `PUT` | `/api/surfaces/{id}/scene` | Szene setzen |
 | `POST` | `/api/surfaces/{id}/blank` | Schwarz schalten |
 | `GET` | `/api/events[?surface={id}]` | Zustandsstrom (SSE) |
+
+Der Zustandsstrom enthält neben den Surfaces auch das `idleAssetId` — das Bild, das eine Surface
+zeigt, solange nichts geschaltet ist. Es wird über den Dateinamen aus der Konfiguration gefunden
+(`mythglass.stage.idle-image`, Vorgabe `Titel`); fehlt es, zeigt die Anzeige ein eingebautes,
+bewusst dunkel gehaltenes Titelbild.
 
 `/api/events` schickt bei jeder Verbindung zuerst den vollständigen Zustand. Mit `surface` meldet
 sich ein Anzeigegerät als dieses Ausgabeziel und erscheint in der Steuerung als «verbunden».
