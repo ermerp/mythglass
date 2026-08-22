@@ -102,6 +102,19 @@ chromium --kiosk --password-store=basic http://localhost/stage/main
 > zeigen. Diese Anzeige meldet sich nirgends an und speichert keine Passwörter; der Keyring hat hier
 > nichts zu tun. Das Skript setzt den Schalter selbst.
 
+### Wieder aus dem Vollbild heraus
+
+Der Kiosk-Modus hat bewusst keine Leiste und keinen Schließen-Knopf — am Spieltisch soll niemand
+versehentlich herausklicken. Drei Wege zurück:
+
+| Weg | Wie |
+|---|---|
+| Tastatur am Pi | `Alt`+`F4` schließt das Fenster |
+| Von einem anderen Rechner | `ssh pi@mythglass.local` und dann `pkill -f chromium` |
+| Beim nächsten Start gar nicht erst | `mv ~/.config/autostart/mythglass-main.desktop ~/` |
+
+Den Autostart wieder einschalten: `./scripts/setup-kiosk.sh` erneut aufrufen.
+
 ## 6. Bilder ablegen
 
 Nach `/srv/mythglass/library`. Unterordner werden zu Kategorien, Dateinamen zu Anzeigenamen:
@@ -260,6 +273,27 @@ Anmeldung. Einmal ab- und wieder anmelden, dann `./scripts/install.sh` erneut la
 
 **Der Monitor zeigt das Ruhebild, obwohl du etwas geschaltet hast.** Prüfe in der Steuerung, ob dort
 „verbunden" steht. Wenn nicht, läuft der Browser auf dem Pi nicht oder zeigt die falsche Adresse.
+
+**Der Kiosk zeigt ERR_CONNECTION_REFUSED.** Der Browser ist da, die Anwendung nicht — jedenfalls
+nicht unter der Adresse, die der Browser aufruft. Nachsehen, wo tatsächlich etwas lauscht:
+
+```bash
+cd ~/mythglass
+docker compose ps
+curl -s -o /dev/null -w "Port 80:   %{http_code}\n" http://localhost/api/surfaces
+curl -s -o /dev/null -w "Port 8080: %{http_code}\n" http://localhost:8080/api/surfaces
+```
+
+Antwortet 8080 statt 80, läuft noch ein Container aus der Zeit vor der Umstellung auf Port 80.
+`docker compose up -d --build` holt das nach. Antwortet gar nichts und `docker compose ps` ist leer,
+ist der Build abgebrochen — dann sagt `docker compose logs --tail 50 mythglass`, woran.
+
+Wer bei Port 8080 bleiben will oder muss, braucht beides:
+
+```bash
+MYTHGLASS_PORT=8080 docker compose up -d --build
+MYTHGLASS_URL=http://localhost:8080 ./scripts/setup-kiosk.sh
+```
 
 **Der Autostart greift nicht.** Prüfe zuerst mit dem Handbefehl aus Schritt 5, ob die Anzeige
 überhaupt funktioniert. Dann weißt du, ob das Problem bei der Anwendung liegt oder nur beim Starten
