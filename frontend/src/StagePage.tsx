@@ -83,6 +83,12 @@ export function StagePage({ surfaceId }: { surfaceId: string }) {
   const unknownSurface = state !== null && surface === undefined;
   const showingImage = layers[front].url !== null && layers[front].broken !== true;
 
+  // Das eingebaute Ruhebild erscheint nur, wenn es kein eigenes gibt — oder wenn sich das eigene
+  // nicht laden ließ. Sonst blitzte es beim Hochfahren kurz auf, während das Titelbild noch geladen
+  // wird, und würde gleich darauf wieder überblendet.
+  const showBuiltInIdle =
+    !showingImage && (idleUrl === null || layers[front].broken === true);
+
   return (
     <div className="stage">
       {/*
@@ -90,7 +96,11 @@ export function StagePage({ surfaceId }: { surfaceId: string }) {
         hinter den Bildebenen und wird ausgeblendet, sobald eine davon etwas zeigt — sonst stünde es
         bei «Ganz zeigen» in den schwarzen Rändern.
       */}
-      <div className="stage-idle" style={{ opacity: showingImage ? 0 : 1 }} aria-hidden={showingImage}>
+      <div
+        className="stage-idle"
+        style={{ opacity: showBuiltInIdle ? 1 : 0 }}
+        aria-hidden={!showBuiltInIdle}
+      >
         <IdleScreen />
       </div>
 

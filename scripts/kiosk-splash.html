@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mythglass startet</title>
+    <!--
+      Der Ladebildschirm des Kiosk-Browsers.
+
+      Er liegt als lokale Datei vor, weil er gebraucht wird, bevor die Anwendung antworten kann —
+      ausliefern kann sie ihn also nicht. Chromium startet sofort damit, statt auf die Anwendung zu
+      warten; niemand schaut in der Zwischenzeit auf einen leeren Schreibtisch oder eine Fehlerseite.
+
+      Sobald die Anwendung erreichbar ist, springt die Seite von selbst weiter. Geprüft wird das mit
+      einem fetch im Modus "no-cors": Die Antwort ist für uns undurchsichtig und uninteressant — es
+      zählt nur, ob überhaupt eine Verbindung zustande kommt. Damit braucht es keine CORS-Freigabe
+      auf der Serverseite.
+
+      Aufruf:  kiosk-splash.html?to=<Zieladresse>
+    -->
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: #000;
+        color: #7a6840;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        cursor: none;
+        overflow: hidden;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        height: 100%;
+      }
+
+      /* Dieselbe Zurückhaltung wie beim Ruhebild: Der Monitor soll den Raum nicht erhellen. */
+      svg {
+        width: min(22vh, 22vw);
+        height: min(22vh, 22vw);
+        color: #6a5a34;
+        animation: atmen 3.2s ease-in-out infinite;
+      }
+
+      @keyframes atmen {
+        0%,
+        100% {
+          opacity: 0.45;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      h1 {
+        margin: 0;
+        font-size: min(3.2vh, 3.2vw);
+        font-weight: 500;
+        letter-spacing: 0.42em;
+        text-indent: 0.42em;
+        text-transform: uppercase;
+      }
+
+      p {
+        margin: 0;
+        font-size: min(1.9vh, 1.9vw);
+        color: #4a4030;
+        letter-spacing: 0.06em;
+      }
+
+      /* Wer nicht sehen will, dass sich etwas bewegt, soll wenigstens nicht geblendet werden. */
+      @media (prefers-reduced-motion: reduce) {
+        svg {
+          animation: none;
+          opacity: 0.8;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg viewBox="0 0 120 120" aria-hidden="true" fill="none" stroke="currentColor">
+        <circle cx="60" cy="60" r="46" stroke-width="1.2" opacity="0.55" />
+        <circle cx="60" cy="60" r="34" stroke-width="0.6" opacity="0.35" />
+        <path d="M60 22 L92 46 L80 88 L40 88 L28 46 Z" stroke-width="1.2" stroke-linejoin="round" opacity="0.7" />
+        <path d="M60 22 L60 88 M28 46 L92 46" stroke-width="0.6" opacity="0.3" />
+      </svg>
+      <h1>Mythglass</h1>
+      <p id="status">wird gestartet …</p>
+    </main>
+
+    <script>
+      const ZIEL = new URLSearchParams(location.search).get("to") || "http://localhost/stage/main";
+      const PRUEFADRESSE = new URL("/api/surfaces", ZIEL).href;
+      const ABSTAND_MS = 1000;
+      // Nach dieser Zeit wird trotzdem gewechselt. Die Fehlerseite des Browsers versucht es von
+      // selbst weiter — sie ist immer noch besser, als hier ewig "wird gestartet" zu behaupten.
+      const AUFGEBEN_NACH_MS = 120000;
+
+      const status = document.getElementById("status");
+      const beginn = Date.now();
+
+      async function pruefen() {
+        try {
+          await fetch(PRUEFADRESSE, { mode: "no-cors", cache: "no-store" });
+          status.textContent = "verbunden";
+          location.replace(ZIEL);
+          return;
+        } catch {
+          // Noch nicht erreichbar — das ist beim Hochfahren der Normalfall.
+        }
+
+        const wartet = Math.round((Date.now() - beginn) / 1000);
+        status.textContent = wartet < 10 ? "wird gestartet …" : `wird gestartet … (${wartet}s)`;
+
+        if (Date.now() - beginn > AUFGEBEN_NACH_MS) {
+          location.replace(ZIEL);
+          return;
+        }
+        setTimeout(pruefen, ABSTAND_MS);
+      }
+
+      pruefen();
+    </script>
+  </body>
+</html>

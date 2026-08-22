@@ -15,7 +15,7 @@ import { useStageState } from "./useStageState";
  * Was der Spielleiter in der Hand hält.
  *
  * Die Bedienung ist auf eine Hand im Halbdunkel ausgelegt, während nebenbei erzählt wird: große
- * Kacheln, kurze Wege, und ein Schwarz-Knopf, der immer sichtbar bleibt. Alles, was man selten
+ * Kacheln, kurze Wege, und ein Panik-Knopf, der immer sichtbar bleibt. Alles, was man selten
  * anfasst, liegt hinter dem Zahnrad — der Platz über dem Trennstrich gehört den Bildern.
  */
 export function ControlPage() {
@@ -130,7 +130,7 @@ export function ControlPage() {
             disabled={busy}
             onClick={() => void run(() => blankSurface(surface.id))}
           >
-            Schwarz
+            Panik!
           </button>
         </div>
 

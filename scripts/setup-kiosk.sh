@@ -49,7 +49,11 @@ echo "  Adresse: ${BASE_URL}/stage/${SURFACE_ID}"
 echo "  Starter: ${STARTER}"
 
 # Ein Bildschirm, der mitten in der Sitzung dunkel wird, ist genau das, was dieses Geraet nicht tun soll.
-if command -v raspi-config >/dev/null 2>&1; then
+# Beim Auffrischen durch update.sh wird das uebersprungen: Es ist laengst eingestellt, und ein
+# sudo-Aufruf mitten in einem Update ist unerwuenscht.
+if [[ -n "${MYTHGLASS_SKIP_BLANKING:-}" ]]; then
+  echo "Bildschirmschoner unveraendert gelassen."
+elif command -v raspi-config >/dev/null 2>&1; then
   echo "Bildschirmschoner wird abgeschaltet ..."
   sudo raspi-config nonint do_blanking 1
 else

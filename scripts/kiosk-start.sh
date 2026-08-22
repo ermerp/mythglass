@@ -10,8 +10,9 @@
 # Warum ein eigenes Skript und nicht einfach Chromium im Autostart-Eintrag:
 #
 #  1. Beim Hochfahren ist der Desktop schneller fertig als Docker und die Anwendung darin. Chromium
-#     würde ins Leere laufen und den Spielern eine Fehlerseite zeigen. Also wird hier gewartet, bis
-#     die Anwendung antwortet.
+#     startet deshalb nicht direkt auf der Anzeige, sondern auf kiosk-splash.html — einem
+#     Ladebildschirm, der von selbst weiterspringt, sobald die Anwendung antwortet. So sieht niemand
+#     einen leeren Schreibtisch oder eine Fehlerseite.
 #  2. Der Autostart-Eintrag zeigt nur noch auf dieses Skript. Ändern sich die Aufrufparameter des
 #     Browsers, genügt ein Update — setup-kiosk.sh muss dafür nicht erneut laufen.
 
@@ -21,10 +22,8 @@ SURFACE_ID="${1:-main}"
 BASE_URL="${MYTHGLASS_URL:-http://localhost}"
 URL="${BASE_URL}/stage/${SURFACE_ID}"
 
-# So lange wird auf die Anwendung gewartet. Läuft die Zeit ab, startet der Browser trotzdem: Eine
-# Fehlerseite, die sich selbst wiederholt, ist immer noch besser als ein leerer Bildschirm ohne
-# jeden Hinweis.
-WARTEZEIT_SEKUNDEN="${MYTHGLASS_KIOSK_TIMEOUT:-120}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SPLASH="${SCRIPT_DIR}/kiosk-splash.html"
 
 # Der Name des Chromium-Pakets hat sich zwischen den Raspberry-Pi-OS-Ständen geändert.
 if command -v chromium >/dev/null 2>&1; then
@@ -55,16 +54,19 @@ CHROMIUM_FLAGS=(
   --autoplay-policy=no-user-gesture-required
 )
 
-echo "Warte auf ${BASE_URL} (bis zu ${WARTEZEIT_SEKUNDEN}s) ..."
+if [[ -r "${SPLASH}" ]]; then
+  # Der Ladebildschirm wartet selbst auf die Anwendung und wechselt dann zur Anzeige.
+  START_SEITE="file://${SPLASH}?to=$(printf '%s' "${URL}" | sed 's/&/%26/g')"
+  echo "Starte Ladebildschirm, Ziel: ${URL}"
+else
+  # Ohne Ladebildschirm hier warten, damit der Browser nicht ins Leere laeuft.
+  echo "kiosk-splash.html fehlt — warte stattdessen hier auf ${BASE_URL} ..." >&2
+  ende=$(( SECONDS + ${MYTHGLASS_KIOSK_TIMEOUT:-120} ))
+  while (( SECONDS < ende )); do
+    curl -fsS -m 2 "${BASE_URL}/api/surfaces" >/dev/null 2>&1 && break
+    sleep 2
+  done
+  START_SEITE="${URL}"
+fi
 
-ende=$(( SECONDS + WARTEZEIT_SEKUNDEN ))
-while (( SECONDS < ende )); do
-  if curl -fsS -m 2 "${BASE_URL}/api/surfaces" >/dev/null 2>&1; then
-    echo "Anwendung antwortet, starte Anzeige für Surface ${SURFACE_ID}."
-    exec "${CHROMIUM}" "${CHROMIUM_FLAGS[@]}" "${URL}"
-  fi
-  sleep 2
-done
-
-echo "Anwendung hat innerhalb von ${WARTEZEIT_SEKUNDEN}s nicht geantwortet — starte trotzdem." >&2
-exec "${CHROMIUM}" "${CHROMIUM_FLAGS[@]}" "${URL}"
+exec "${CHROMIUM}" "${CHROMIUM_FLAGS[@]}" "${START_SEITE}"

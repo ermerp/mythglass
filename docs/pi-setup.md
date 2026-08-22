@@ -95,11 +95,12 @@ startet der Pi direkt in die Anzeige. Ohne Neustart ausprobieren, beenden mit `A
 ./scripts/kiosk-start.sh
 ```
 
-**Der Starter wartet, bis die Anwendung antwortet.** Beim Hochfahren ist der Desktop schneller fertig
-als Docker und die Anwendung darin; ohne dieses Warten würde Chromium ins Leere laufen und den
-Spielern eine Fehlerseite zeigen, bevor es sich von selbst fängt. Antwortet die Anwendung nach zwei
-Minuten immer noch nicht, startet der Browser trotzdem — eine Fehlerseite ist immer noch besser als
-ein leerer Bildschirm ohne jeden Hinweis.
+**Beim Hochfahren erscheint zuerst ein Ladebildschirm.** Der Desktop ist schneller fertig als Docker
+und die Anwendung darin. Chromium startet deshalb sofort auf einer lokalen Seite, die zeigt, dass
+etwas passiert — und die von selbst zur Anzeige wechselt, sobald die Anwendung antwortet. So schaut
+niemand auf einen leeren Schreibtisch oder eine Fehlerseite. Antwortet sie nach zwei Minuten immer
+noch nicht, wechselt sie trotzdem; dann siehst du die Fehlerseite des Browsers, die es weiter
+versucht.
 
 > `--password-store=basic` gehört dazu: Ohne diesen Schalter legt Chromium den Schlüssel, mit dem es
 > Cookies verschlüsselt, im GNOME-Keyring ab. Der ist nach dem automatischen Login nicht entsperrt,
@@ -208,8 +209,11 @@ cd ~/mythglass
 ```
 
 Das holt die Änderungen, baut neu und startet die Anwendung. Es zeigt dir vorher, was sich geändert
-hat, und tut nichts, wenn du bereits auf dem neuesten Stand bist. Ändert sich dabei der Start des
-Kiosk-Browsers, sagt es dir das.
+hat, und tut nichts, wenn du bereits auf dem neuesten Stand bist.
+
+**Ein Befehl genügt.** Vorhandene Autostart-Einträge für den Kiosk-Browser werden dabei mit
+aufgefrischt; `setup-kiosk.sh` musst du dafür nicht selbst aufrufen. Angelegt wird nichts — wer den
+Kiosk nie eingerichtet hat, bekommt ihn auch nicht untergeschoben.
 
 > Meldet die Zeile `No such file or directory`, stammt dein Klon aus einer Zeit vor diesem Skript —
 > es kann sich schlecht selbst ausliefern. Dann einmalig `git pull && docker compose up -d --build`,
@@ -218,9 +222,6 @@ Kiosk-Browsers, sagt es dir das.
 **Deine Bilder sind davon nicht betroffen** — sie liegen unter `/srv/mythglass` und damit außerhalb
 des Projektordners. Der Kiosk-Browser auf dem Pi verbindet sich nach dem Neustart der Anwendung von
 selbst wieder; dort muss niemand etwas anfassen.
-
-Eine Ausnahme: Ändert sich, wie der Kiosk-Browser gestartet wird, muss `./scripts/setup-kiosk.sh`
-einmal neu laufen. Das Update sagt nichts darüber — im Zweifel schadet es nie, es erneut aufzurufen.
 
 Der Build dauert deutlich kürzer als beim ersten Mal, weil der Gradle-Cache erhalten bleibt.
 
@@ -232,7 +233,7 @@ Nimm dir dafür zwanzig Minuten, bevor ihr wirklich spielt. Der Reihe nach:
 
 1. **Bild schalten.** In der Steuerung eine Kachel antippen — auf dem Monitor erscheint das Bild mit
    einer weichen Überblendung. Die Kachel bekommt einen goldenen Rahmen, oben steht der Name.
-2. **Schwarz.** Der Knopf oben rechts nimmt das Bild sofort weg; der Monitor fällt auf das Ruhebild
+2. **Panik!** Der Knopf oben rechts nimmt das Bild sofort weg; der Monitor fällt auf das Ruhebild
    zurück. Das ist die Panik-Taste; probier sie aus, damit dein Spielleiter sie im Ernstfall blind
    trifft.
 3. **Einpassung.** Unter dem Zahnrad zwischen „Ganz zeigen" und „Fläche füllen" wechseln, während ein

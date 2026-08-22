@@ -139,7 +139,7 @@ erreichbar, ohne Portweiterleitung.
 | `GET` | `/api/assets/{id}/full` | Originaldatei |
 | `GET` | `/api/surfaces` | Zustand aller Ausgabeziele |
 | `PUT` | `/api/surfaces/{id}/scene` | Szene setzen |
-| `POST` | `/api/surfaces/{id}/blank` | Schwarz schalten |
+| `POST` | `/api/surfaces/{id}/blank` | Bild wegnehmen (der Panik-Knopf) |
 | `GET` | `/api/events[?surface={id}]` | Zustandsstrom (SSE) |
 
 Der Zustandsstrom enthält neben den Surfaces auch das `idleAssetId` — das Bild, das eine Surface

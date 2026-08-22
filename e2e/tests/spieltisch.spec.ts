@@ -78,7 +78,7 @@ test("Bild schalten, markieren und wieder schwarz schalten", async ({ tisch }) =
   await expect(control.locator(".now-showing-text strong")).toHaveText("Gorak der Wirt");
   await expect.poll(() => visibleImage(stage)).toContain("/full");
 
-  await control.getByRole("button", { name: "Schwarz" }).click();
+  await control.getByRole("button", { name: "Panik!" }).click();
 
   await expect(control.locator(".now-showing-text strong")).toHaveText("Nichts");
   await expect.poll(() => visibleImage(stage)).toBeNull();
@@ -147,7 +147,7 @@ test("Steuerung passt am Handy in die Breite", async ({ tisch }) => {
 
   // Der Schwarz-Knopf muss auch nach dem Scrollen erreichbar bleiben.
   await control.mouse.wheel(0, 2000);
-  await expect(control.getByRole("button", { name: "Schwarz" })).toBeInViewport();
+  await expect(control.getByRole("button", { name: "Panik!" })).toBeInViewport();
 });
 
 test("Startseite führt zu Steuerung und Ausgabezielen", async ({ tisch }) => {
@@ -234,7 +234,7 @@ test("Ein geschaltetes Bild verdeckt das Ruhebild und gibt es danach wieder frei
   // Sonst stünde das Ruhebild bei "Ganz zeigen" in den schwarzen Rändern.
   await expect.poll(() => stage.locator(".stage-idle").evaluate((e) => getComputedStyle(e).opacity)).toBe("0");
 
-  await control.getByRole("button", { name: "Schwarz" }).click();
+  await control.getByRole("button", { name: "Panik!" }).click();
 
   await expect.poll(() => stage.locator(".stage-idle").evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
 });

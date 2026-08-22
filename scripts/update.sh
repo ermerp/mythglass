@@ -53,13 +53,6 @@ main() {
   echo
   git --no-pager log --oneline "${vorher}..${nachher}"
 
-  # Ändert sich die Startzeile des Kiosk-Browsers, muss setup-kiosk.sh einmal neu laufen — das kann
-  # dieses Skript nicht für den Benutzer entscheiden, aber es kann darauf hinweisen.
-  local kiosk_geaendert=""
-  if ! git diff --quiet "${vorher}" "${nachher}" -- scripts/setup-kiosk.sh; then
-    kiosk_geaendert="ja"
-  fi
-
   schritt "Neu bauen und starten"
 
   # Der Gradle-Cache bleibt erhalten, deshalb dauert das deutlich kürzer als die erste Einrichtung.
@@ -74,11 +67,7 @@ main() {
       echo
       echo "    Der Kiosk-Browser auf dem Pi verbindet sich von selbst neu — dafür muss"
       echo "    niemand etwas anfassen."
-      if [[ -n "${kiosk_geaendert}" ]]; then
-        echo
-        printf '    \033[33m!\033[0m Der Start des Kiosk-Browsers hat sich geändert. Bitte einmal:\n'
-        printf '        ./scripts/setup-kiosk.sh\n'
-      fi
+      autostart_auffrischen "${PROJECT_DIR}"
       return 0
     fi
     sleep 2
@@ -91,6 +80,36 @@ main() {
 }
 
 schritt() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
+
+# Schreibt vorhandene Autostart-Eintraege neu, damit ein Update wirklich mit einem Befehl auskommt.
+# Angelegt wird hier nichts: Wer den Kiosk nie eingerichtet hat, bekommt ihn auch nicht untergeschoben.
+autostart_auffrischen() {
+  local projekt="$1" eintrag surface url gefunden=0
+
+  shopt -s nullglob
+  for eintrag in "${HOME}"/.config/autostart/mythglass-*.desktop; do
+    surface="$(basename "${eintrag}" .desktop)"
+    surface="${surface#mythglass-}"
+
+    # Eine eigene Adresse aus dem bestehenden Eintrag uebernehmen, statt sie zu ueberschreiben.
+    url="$(sed -n 's/^Exec=env MYTHGLASS_URL=\([^ ]*\).*/\1/p' "${eintrag}")"
+
+    if MYTHGLASS_SKIP_BLANKING=1 MYTHGLASS_URL="${url:-${MYTHGLASS_URL:-http://localhost}}" \
+        "${projekt}/scripts/setup-kiosk.sh" "${surface}" >/dev/null 2>&1; then
+      echo "    Autostart für Surface ${surface} aufgefrischt."
+      gefunden=1
+    else
+      printf '    \033[33m!\033[0m Autostart für Surface %s konnte nicht aufgefrischt werden.\n' "${surface}"
+      printf '        Bitte einmal von Hand: ./scripts/setup-kiosk.sh %s\n' "${surface}"
+    fi
+  done
+  shopt -u nullglob
+
+  if (( gefunden == 0 )); then
+    return 0
+  fi
+  echo "    Beim nächsten Neustart des Pi greift der aufgefrischte Eintrag."
+}
 
 # Aufruf und Abbruch in einer Zeile: Bash liest sie als Einheit ein und beendet sich danach, ohne
 # noch einmal in die Datei zu schauen. Stünde das "exit" in einer eigenen Zeile, würde Bash nach dem
