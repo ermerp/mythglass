@@ -7,6 +7,11 @@ node_modules/
 frontend/dist/
 *.tsbuildinfo
 
+# End-to-End-Tests
+e2e/build/
+e2e/test-results/
+e2e/playwright-report/
+
 # Lokale Laufzeitdaten (Bilder-Bibliothek, Thumbnail-Cache)
 /data/
 
