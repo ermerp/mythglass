@@ -189,7 +189,12 @@ cd ~/mythglass
 ```
 
 Das holt die Änderungen, baut neu und startet die Anwendung. Es zeigt dir vorher, was sich geändert
-hat, und tut nichts, wenn du bereits auf dem neuesten Stand bist.
+hat, und tut nichts, wenn du bereits auf dem neuesten Stand bist. Ändert sich dabei der Start des
+Kiosk-Browsers, sagt es dir das.
+
+> Meldet die Zeile `No such file or directory`, stammt dein Klon aus einer Zeit vor diesem Skript —
+> es kann sich schlecht selbst ausliefern. Dann einmalig `git pull && docker compose up -d --build`,
+> danach ist es da.
 
 **Deine Bilder sind davon nicht betroffen** — sie liegen unter `/srv/mythglass` und damit außerhalb
 des Projektordners. Der Kiosk-Browser auf dem Pi verbindet sich nach dem Neustart der Anwendung von
