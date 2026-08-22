@@ -50,6 +50,7 @@ backend/     Spring Boot 4, Java 21, Spring Modulith
   library/   Ordner-Index, Vorschaubilder, Auslieferung der Bilder
   stage/     Surfaces, Szenen, maßgeblicher Zustand, Verteilung über SSE
 frontend/    React 19 + TypeScript, per Vite gebaut, landet im Jar
+e2e/         Playwright: prüft beide Geräte gleichzeitig gegen das gebaute Jar
 docs/        Einrichtung des Raspberry Pi
 scripts/     Einrichtung des Vollbild-Browsers
 ```
@@ -66,25 +67,56 @@ Inhaltstyp. Ein neuer Typ ist ein Record hier plus eine Darstellung im Frontend,
 
 Voraussetzungen: JDK 21. Node wird vom Gradle-Build selbst geladen.
 
-```bash
-# Backend samt gebauter Oberfläche
-./gradlew :backend:bootRun
+Es gibt drei Schleifen, von schnell nach gründlich. Der Pi ist keine davon — er ist die
+Abnahmeumgebung, nicht die Werkbank.
 
-# Oberfläche mit Hot Reload (Backend muss daneben laufen)
-cd frontend && npm run dev
-```
+### 1. Innere Schleife — Sekunden
 
-Ein paar Bilder nach `data/library/` legen — Unterordner werden zu Kategorien. Dann:
-
-- Steuerung: <http://localhost:8080>
-- Anzeige: <http://localhost:8080/stage/main>
-
-Am besten in zwei Fenstern nebeneinander.
+Für alles, was an der Oberfläche passiert:
 
 ```bash
-./gradlew :backend:test    # alle Tests
-./gradlew :backend:bootJar # ein Jar mit allem darin
+./gradlew :backend:bootRun          # Backend auf 8080
+cd frontend && npm run dev          # Oberfläche auf 5173, mit Hot Reload
 ```
+
+Vite reicht `/api` an 8080 weiter. Bilder nach `data/library/` legen — Unterordner werden zu
+Kategorien. Dann <http://localhost:5173> und <http://localhost:5173/stage/main> nebeneinander
+öffnen; so sieht man beide Geräte auf einem Bildschirm.
+
+### 2. Zusammenbau — eine Minute
+
+```bash
+./gradlew build                     # baut alles, führt die Backend-Tests aus
+cd e2e && npx playwright test        # fährt das Jar hoch und prüft beide Geräte im Browser
+```
+
+Die E2E-Tests starten das gebaute Jar selbst, legen sich eine eigene Bibliothek an und bedienen
+Monitor und Handy als zwei getrennte Browser-Kontexte. Damit ist genau der Stand geprüft, der später
+im Container landet.
+
+Einmalig vorab: `cd e2e && npm install && npx playwright install chromium`.
+
+### 3. Container — nur wenn es um den Pi geht
+
+```bash
+MYTHGLASS_LIBRARY=./data/library MYTHGLASS_CACHE=./data/cache docker compose up --build
+```
+
+Dasselbe Compose-File läuft auf dem Pi ohne die beiden Variablen; die Vorgaben zeigen dort auf
+`/srv/mythglass`.
+
+### Vom Handy aus ausprobieren
+
+Unter WSL2 hängt die Anwendung standardmäßig hinter einem eigenen Netz und ist vom Handy aus nicht
+erreichbar. Der bequemste Weg ist der gespiegelte Netzwerkmodus — in `%USERPROFILE%\.wslconfig`:
+
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+
+Danach `wsl --shutdown` und neu starten. Der Pi ist dann unter der IP des Windows-Rechners
+erreichbar, ohne Portweiterleitung.
 
 ## API
 
