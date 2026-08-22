@@ -5,7 +5,10 @@ services:
     container_name: mythglass
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      # Port 80 nach außen: Damit genügt am Handy "http://mythglass.local" ohne Portangabe. Ein
+      # vergessener Port ist sonst genau die Art Fehler, die am Spieltisch niemand findet.
+      # Innen bleibt es 8080, das ändert an der Anwendung nichts.
+      - "${MYTHGLASS_PORT:-80}:8080"
     volumes:
       # Read-only: Die Anwendung liest die Bibliothek nur. Sie kann die Bilder des Spielleiters
       # damit gar nicht beschädigen — auch nicht bei einem Fehler im Code.

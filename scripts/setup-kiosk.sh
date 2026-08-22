@@ -14,7 +14,10 @@
 set -euo pipefail
 
 SURFACE_ID="${1:-main}"
-URL="http://localhost:8080/stage/${SURFACE_ID}"
+# Ohne Port, weil der Container auf Port 80 veröffentlicht. Läuft er woanders, kann die Basisadresse
+# über MYTHGLASS_URL gesetzt werden, etwa MYTHGLASS_URL=http://localhost:8080
+BASE_URL="${MYTHGLASS_URL:-http://localhost}"
+URL="${BASE_URL}/stage/${SURFACE_ID}"
 AUTOSTART_DIR="${HOME}/.config/autostart"
 DESKTOP_FILE="${AUTOSTART_DIR}/mythglass-${SURFACE_ID}.desktop"
 
