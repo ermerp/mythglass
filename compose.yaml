@@ -9,9 +9,14 @@ services:
     volumes:
       # Read-only: Die Anwendung liest die Bibliothek nur. Sie kann die Bilder des Spielleiters
       # damit gar nicht beschädigen — auch nicht bei einem Fehler im Code.
-      - /srv/mythglass/library:/data/library:ro
+      #
+      # Die Vorgabe ist der Pfad auf dem Pi. Zum lokalen Ausprobieren die beiden Variablen setzen,
+      # etwa in einer .env-Datei neben dieser hier:
+      #   MYTHGLASS_LIBRARY=./data/library
+      #   MYTHGLASS_CACHE=./data/cache
+      - ${MYTHGLASS_LIBRARY:-/srv/mythglass/library}:/data/library:ro
       # Beschreibbar, enthält nur erzeugte Vorschaubilder. Darf jederzeit gelöscht werden.
-      - /srv/mythglass/cache:/data/cache
+      - ${MYTHGLASS_CACHE:-/srv/mythglass/cache}:/data/cache
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
       interval: 30s

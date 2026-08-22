@@ -46,6 +46,12 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+// Fester Dateiname statt Versionsnummer: Dockerfile und E2E-Tests müssen den Pfad kennen, ohne ihn
+// bei jeder Versionsänderung nachzuziehen.
+tasks.bootJar {
+    archiveFileName = "mythglass.jar"
+}
+
 tasks.bootRun {
     // Ohne das startet bootRun im Verzeichnis backend/, und der Vorgabepfad ./data/library aus der
     // application.yaml zeigt auf backend/data/library — also ins Leere. Die Bibliothek liegt im

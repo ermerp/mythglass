@@ -19,7 +19,7 @@ COPY . .
 
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon :backend:bootJar -x test \
-    && cp backend/build/libs/backend-*.jar /mythglass.jar
+    && cp backend/build/libs/mythglass.jar /mythglass.jar
 
 # ---------------------------------------------------------------------------
 # Laufzeit
