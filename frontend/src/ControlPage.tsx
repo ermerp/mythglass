@@ -15,20 +15,20 @@ import { useStageState } from "./useStageState";
  * Was der Spielleiter in der Hand hält.
  *
  * Die Bedienung ist auf eine Hand im Halbdunkel ausgelegt, während nebenbei erzählt wird: große
- * Kacheln, kurze Wege, und ein Schwarz-Knopf, der immer sichtbar bleibt. Was gerade auf dem Monitor
- * steht, zeigt die Oberfläche oben an — damit niemand sich umdrehen muss, um das zu prüfen.
+ * Kacheln, kurze Wege, und ein Schwarz-Knopf, der immer sichtbar bleibt. Alles, was man selten
+ * anfasst, liegt hinter dem Zahnrad — der Platz über dem Trennstrich gehört den Bildern.
  */
 export function ControlPage() {
   const { state, online } = useStageState();
   const [library, setLibrary] = useState<Library | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedSurfaceId, setSelectedSurfaceId] = useState<string | null>(null);
   const [fit, setFit] = useState<Fit>("CONTAIN");
 
   const surfaces = state?.surfaces ?? [];
-  const surface =
-    surfaces.find((candidate) => candidate.id === selectedSurfaceId) ?? surfaces[0];
+  const surface = surfaces.find((candidate) => candidate.id === selectedSurfaceId) ?? surfaces[0];
 
   const reloadLibrary = useCallback(async () => {
     try {
@@ -58,21 +58,35 @@ export function ControlPage() {
   if (surface === undefined) {
     return (
       <main className="control">
-        <p className="notice">{online ? "Keine Ausgabeziele konfiguriert." : "Verbinde mit Mythglass …"}</p>
+        <p className="notice">
+          {online ? "Keine Ausgabeziele konfiguriert." : "Verbinde mit Mythglass …"}
+        </p>
       </main>
     );
   }
 
   const shownAssetId = surface.scene.type === "image" ? surface.scene.assetId : null;
 
+  /**
+   * Die Einpassung gilt für den nächsten Griff — läuft aber gerade ein Bild, wird sie sofort darauf
+   * angewandt. Sonst müsste man die Kachel erneut suchen und antippen, nur um zu sehen, was die
+   * andere Einstellung bewirkt.
+   */
+  const changeFit = (next: Fit) => {
+    setFit(next);
+    if (shownAssetId !== null) {
+      void run(() => showScene(surface.id, { type: "image", assetId: shownAssetId, fit: next }));
+    }
+  };
+
   return (
     <main className="control">
       <header className="control-header">
         <div className="status-row">
           <ConnectionBadge online={online} surface={surface} />
-          {surfaces.length > 1 && (
-            <div className="surface-picker">
-              {surfaces.map((candidate) => (
+          <div className="header-actions">
+            {surfaces.length > 1 &&
+              surfaces.map((candidate) => (
                 <button
                   key={candidate.id}
                   type="button"
@@ -82,8 +96,16 @@ export function ControlPage() {
                   {candidate.displayName}
                 </button>
               ))}
-            </div>
-          )}
+            <button
+              type="button"
+              className={settingsOpen ? "icon-button icon-button-active" : "icon-button"}
+              aria-label="Einstellungen"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              <GearIcon />
+            </button>
+          </div>
         </div>
 
         <div className="now-showing">
@@ -108,42 +130,53 @@ export function ControlPage() {
           </button>
         </div>
 
+        {settingsOpen && (
+          <div className="settings-panel">
+            <div className="setting">
+              <span className="setting-label">Einpassung</span>
+              <div className="fit-picker" role="group" aria-label="Einpassung">
+                {(["CONTAIN", "COVER"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={option === fit ? "chip chip-active" : "chip"}
+                    disabled={busy}
+                    onClick={() => changeFit(option)}
+                  >
+                    {option === "CONTAIN" ? "Ganz zeigen" : "Fläche füllen"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="setting">
+              <span className="setting-label">Bibliothek</span>
+              <button
+                type="button"
+                className="chip"
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await rescanLibrary();
+                    await reloadLibrary();
+                  })
+                }
+              >
+                Neu einlesen
+              </button>
+            </div>
+          </div>
+        )}
+
         {error !== null && <p className="error">{error}</p>}
       </header>
-
-      <div className="toolbar">
-        <div className="fit-picker" role="group" aria-label="Einpassung">
-          {(["CONTAIN", "COVER"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={option === fit ? "chip chip-active" : "chip"}
-              onClick={() => setFit(option)}
-            >
-              {option === "CONTAIN" ? "Ganz zeigen" : "Fläche füllen"}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="chip"
-          disabled={busy}
-          onClick={() =>
-            void run(async () => {
-              await rescanLibrary();
-              await reloadLibrary();
-            })
-          }
-        >
-          Neu einlesen
-        </button>
-      </div>
 
       {library === null ? (
         <p className="notice">Bibliothek wird geladen …</p>
       ) : library.folders.length === 0 ? (
         <p className="notice">
-          Die Bibliothek ist leer. Bilder in den Bibliotheksordner legen und «Neu einlesen» drücken.
+          Die Bibliothek ist leer. Bilder in den Bibliotheksordner legen und unter dem Zahnrad «Neu
+          einlesen» drücken.
         </p>
       ) : (
         library.folders.map((folder) => (
@@ -157,9 +190,7 @@ export function ControlPage() {
                   className={asset.id === shownAssetId ? "tile tile-active" : "tile"}
                   disabled={busy}
                   onClick={() =>
-                    void run(() =>
-                      showScene(surface.id, { type: "image", assetId: asset.id, fit }),
-                    )
+                    void run(() => showScene(surface.id, { type: "image", assetId: asset.id, fit }))
                   }
                 >
                   <img src={thumbnailUrl(asset.id)} alt="" loading="lazy" />
@@ -190,6 +221,17 @@ function describe(surface: SurfaceState, library: Library | null): string {
     return "Nichts";
   }
   const assetId = surface.scene.assetId;
-  const asset = library?.folders.flatMap((folder) => folder.assets).find((candidate) => candidate.id === assetId);
+  const asset = library?.folders
+    .flatMap((folder) => folder.assets)
+    .find((candidate) => candidate.id === assetId);
   return asset?.name ?? "Unbekanntes Bild";
+}
+
+function GearIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19.4 14.5a1.6 1.6 0 0 0 .33 1.78l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.78-.33 1.6 1.6 0 0 0-.98 1.47V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.78.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .33-1.78 1.6 1.6 0 0 0-1.47-.98H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.33-1.78l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.78.33H9a1.6 1.6 0 0 0 .98-1.47V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 .98 1.47 1.6 1.6 0 0 0 1.78-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.33 1.78V9a1.6 1.6 0 0 0 1.47.98H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.47.98z" />
+    </svg>
+  );
 }

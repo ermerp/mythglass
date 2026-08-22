@@ -146,3 +146,45 @@ test("Steuerung passt am Handy in die Breite", async ({ tisch }) => {
   await control.mouse.wheel(0, 2000);
   await expect(control.getByRole("button", { name: "Schwarz" })).toBeInViewport();
 });
+
+test("Einstellungen liegen hinter dem Zahnrad", async ({ tisch }) => {
+  const control = await tisch.handy();
+  const einstellungen = control.getByRole("button", { name: "Einstellungen" });
+
+  // Zugeklappt darf nichts davon Platz kosten.
+  await expect(control.getByRole("button", { name: "Ganz zeigen" })).toBeHidden();
+  await expect(control.getByRole("button", { name: "Neu einlesen" })).toBeHidden();
+  await expect(einstellungen).toHaveAttribute("aria-expanded", "false");
+
+  await einstellungen.click();
+
+  await expect(einstellungen).toHaveAttribute("aria-expanded", "true");
+  await expect(control.getByRole("button", { name: "Ganz zeigen" })).toBeVisible();
+  await expect(control.getByRole("button", { name: "Neu einlesen" })).toBeVisible();
+});
+
+/**
+ * Die Einpassung war vorher eine Einstellung für den nächsten Griff — man musste die Kachel erneut
+ * suchen, um ihre Wirkung zu sehen. Läuft ein Bild, wirkt sie jetzt sofort darauf.
+ */
+test("Geänderte Einpassung wirkt sofort auf das laufende Bild", async ({ tisch }) => {
+  const stage = await tisch.monitor();
+  const control = await tisch.handy();
+
+  await control.getByRole("button", { name: /Gorak/ }).click();
+  await expect(stage.locator(".stage-layer img")).toBeVisible();
+
+  await control.getByRole("button", { name: "Einstellungen" }).click();
+  await control.getByRole("button", { name: "Fläche füllen" }).click();
+
+  await expect
+    .poll(() =>
+      stage.evaluate(() => {
+        const front = [...document.querySelectorAll<HTMLElement>(".stage-layer")]
+          .find((layer) => getComputedStyle(layer).opacity === "1");
+        const image = front?.querySelector("img");
+        return image ? getComputedStyle(image).objectFit : null;
+      }),
+    )
+    .toBe("cover");
+});

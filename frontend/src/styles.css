@@ -191,23 +191,74 @@ body {
   opacity: 0.5;
 }
 
-.toolbar {
+.header-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
 }
 
-.fit-picker,
-.surface-picker {
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.icon-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.icon-button-active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Alles, was selten angefasst wird — der Platz über dem Trennstrich gehört den Bildern. */
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
+
+/*
+ * Beschriftung über den Knöpfen statt daneben: Nebeneinander wird es auf einem schmalen Handy so
+ * eng, dass die Knopfbeschriftung umbricht — und das kostet mehr Platz, als die Zeile spart.
+ */
+.setting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.setting-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.fit-picker {
   display: flex;
   gap: 0.4rem;
 }
 
 .chip {
   min-height: 2.5rem;
+  white-space: nowrap;
   padding: 0 0.85rem;
   font-size: 0.85rem;
   color: var(--text-dim);
