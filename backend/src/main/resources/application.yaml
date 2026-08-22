@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: mythglass
+  threads:
+    virtual:
+      # Jede offene SSE-Verbindung belegt sonst dauerhaft einen Plattform-Thread aus dem Tomcat-Pool.
+      enabled: true
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          # Der Kiosk-Browser soll nach einem Update nicht auf einer alten index.html festhängen.
+          no-cache: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8080
+  shutdown: graceful
+
+mythglass:
+  library:
+    # Im Container per Bind-Mount read-only eingehängt, lokal ein Ordner im Projekt.
+    path: ${MYTHGLASS_LIBRARY_PATH:./data/library}
+    cache: ${MYTHGLASS_CACHE_PATH:./data/cache}
+  stage:
+    surfaces:
+      - id: main
+        type: VISUAL
+        display-name: Spielleiter-Monitor
+      # Der Tischmonitor für die Karte ist später ein weiterer Eintrag hier
+      # plus ein zweites Chromium-Fenster auf /stage/table-map.
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    dev.ermer.mythglass: INFO

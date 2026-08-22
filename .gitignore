@@ -1,0 +1,19 @@
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Frontend
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Lokale Laufzeitdaten (Bilder-Bibliothek, Thumbnail-Cache)
+/data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/

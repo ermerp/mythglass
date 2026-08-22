@@ -1,0 +1,306 @@
+/*
+ * Durchgehend dunkel: Die Steuerung liegt am Spieltisch neben dem Spielleiter, oft im Halbdunkel.
+ * Ein heller Bildschirm dort blendet die Runde und verrät obendrein, dass gleich etwas kommt.
+ */
+:root {
+  --bg: #0b0d12;
+  --surface: #151922;
+  --surface-raised: #1d2230;
+  --border: #2b3242;
+  --text: #e8eaf0;
+  --text-dim: #9aa3b8;
+  --accent: #c8a24a;
+  --bad: #d4574e;
+  --good: #4f9d69;
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  overscroll-behavior-y: contain;
+}
+
+/* ---------- Bühne: der Monitor hinter dem Spielleiterschirm ---------- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+  cursor: none;
+}
+
+.stage-layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 450ms ease-in-out;
+}
+
+.stage-layer img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stage-notice {
+  position: absolute;
+  inset: auto 0 0 0;
+  margin: 0;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.75);
+  line-height: 1.6;
+}
+
+/* ---------- Steuerung: Handy oder Tablet ---------- */
+
+.control {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 0 3rem;
+}
+
+.control-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.75rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.badge-good {
+  color: var(--good);
+  border-color: color-mix(in srgb, var(--good) 45%, transparent);
+}
+
+.badge-warn {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.badge-bad {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 45%, transparent);
+}
+
+.now-showing {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.now-showing-preview {
+  flex: 0 0 auto;
+  width: 4.5rem;
+  height: 3.4rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+}
+
+.now-showing-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.now-showing-empty {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.now-showing-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.now-showing-text .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.now-showing-text strong {
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Die Panik-Taste. Bleibt beim Scrollen sichtbar und ist bewusst groß: Sie wird gebraucht, wenn
+ * etwas schiefgeht, und dann soll niemand zielen müssen.
+ */
+.blank-button {
+  flex: 0 0 auto;
+  min-width: 6rem;
+  min-height: 3.25rem;
+  padding: 0 1.1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--bad);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
+.blank-button:active {
+  background: var(--bad);
+}
+
+.blank-button:disabled {
+  opacity: 0.5;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+}
+
+.fit-picker,
+.surface-picker {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chip {
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip-active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.chip:disabled {
+  opacity: 0.5;
+}
+
+.folder {
+  padding: 0 1rem;
+}
+
+.folder h2 {
+  margin: 1.25rem 0 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+/* Große Kacheln statt dichter Liste — getroffen wird mit dem Daumen, nicht mit einem Mauszeiger. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.6rem;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid transparent;
+  border-radius: 0.7rem;
+  cursor: pointer;
+}
+
+.tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #000;
+}
+
+.tile-name {
+  padding: 0.45rem 0.55rem 0.55rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.tile-active {
+  border-color: var(--accent);
+}
+
+.tile:disabled {
+  opacity: 0.6;
+}
+
+.notice,
+.error {
+  padding: 1rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.75rem;
+  color: var(--bad);
+  background: color-mix(in srgb, var(--bad) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
