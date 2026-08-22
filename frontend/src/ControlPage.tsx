@@ -165,6 +165,10 @@ export function ControlPage() {
                 Neu einlesen
               </button>
             </div>
+
+            <a className="settings-link" href="/">
+              Alle Bildschirme
+            </a>
           </div>
         )}
 

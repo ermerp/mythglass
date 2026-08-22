@@ -16,6 +16,8 @@ interface Spieltisch {
   monitor(surfaceId?: string): Promise<Page>;
   /** Öffnet die Steuerung im Handy-Format. */
   handy(): Promise<Page>;
+  /** Öffnet die Übersicht, die zu allen Bildschirmen führt. */
+  startseite(): Promise<Page>;
 }
 
 const test = base.extend<{ tisch: Spieltisch }>({
@@ -37,10 +39,11 @@ const test = base.extend<{ tisch: Spieltisch }>({
     await use({
       monitor: (surfaceId = "main") => open({ viewport: MONITOR }, `/stage/${surfaceId}`),
       handy: async () => {
-        const page = await open({ viewport: HANDY, isMobile: true, hasTouch: true }, "/");
+        const page = await open({ viewport: HANDY, isMobile: true, hasTouch: true }, "/control");
         await expect(page.getByRole("heading", { name: "NPCs" })).toBeVisible();
         return page;
       },
+      startseite: () => open({ viewport: HANDY, isMobile: true, hasTouch: true }, "/"),
     });
 
     // Alle Geräte trennen. Ohne das hielte eine Verbindung aus einem früheren Test die Surface
@@ -147,6 +150,27 @@ test("Steuerung passt am Handy in die Breite", async ({ tisch }) => {
   await expect(control.getByRole("button", { name: "Schwarz" })).toBeInViewport();
 });
 
+test("Startseite führt zu Steuerung und Ausgabezielen", async ({ tisch }) => {
+  const hub = await tisch.startseite();
+
+  await expect(hub.getByRole("link", { name: /Steuerung/ })).toHaveAttribute("href", "/control");
+
+  // Das Feld entsteht aus der Konfiguration des Servers, nicht aus einer Liste im Frontend.
+  const monitor = hub.getByRole("link", { name: /Spielleiter-Monitor/ });
+  await expect(monitor).toHaveAttribute("href", "/stage/main");
+  await expect(monitor).toHaveAttribute("target", "_blank");
+});
+
+test("Startseite zeigt, ob an einem Ausgabeziel ein Gerät hängt", async ({ tisch }) => {
+  const hub = await tisch.startseite();
+  await expect(hub.locator(".hub-card .dot")).toHaveCount(1);
+  await expect(hub.locator(".hub-card .dot-on")).toHaveCount(0);
+
+  await tisch.monitor();
+
+  await expect(hub.locator(".hub-card .dot-on")).toHaveCount(1);
+});
+
 test("Einstellungen liegen hinter dem Zahnrad", async ({ tisch }) => {
   const control = await tisch.handy();
   const einstellungen = control.getByRole("button", { name: "Einstellungen" });
@@ -161,6 +185,7 @@ test("Einstellungen liegen hinter dem Zahnrad", async ({ tisch }) => {
   await expect(einstellungen).toHaveAttribute("aria-expanded", "true");
   await expect(control.getByRole("button", { name: "Ganz zeigen" })).toBeVisible();
   await expect(control.getByRole("button", { name: "Neu einlesen" })).toBeVisible();
+  await expect(control.getByRole("link", { name: "Alle Bildschirme" })).toHaveAttribute("href", "/");
 });
 
 /**

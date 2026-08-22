@@ -80,8 +80,15 @@ cd frontend && npm run dev          # Oberfläche auf 5173, mit Hot Reload
 ```
 
 Vite reicht `/api` an 8080 weiter. Bilder nach `data/library/` legen — Unterordner werden zu
-Kategorien. Dann <http://localhost:5173> und <http://localhost:5173/stage/main> nebeneinander
-öffnen; so sieht man beide Geräte auf einem Bildschirm.
+Kategorien, beliebig tief verschachtelt. <http://localhost:5173> ist die Übersicht; von dort führt je
+ein Feld zur Steuerung und zu den Ausgabezielen. Am besten Steuerung und Bühne nebeneinander öffnen,
+dann sieht man beide Geräte auf einem Bildschirm.
+
+| Seite | Adresse |
+|---|---|
+| Übersicht | `/` |
+| Spielleiter-Steuerung | `/control` |
+| Ausgabeziel | `/stage/{id}`, in v1 `/stage/main` |
 
 ### 2. Zusammenbau — eine Minute
 

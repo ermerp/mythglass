@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 class SpaForwardController {
 
-    @GetMapping("/stage/{surfaceId}")
-    String stage() {
+    @GetMapping({"/control", "/stage/{surfaceId}"})
+    String page() {
         return "forward:/index.html";
     }
 }

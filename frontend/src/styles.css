@@ -251,6 +251,12 @@ body {
   color: var(--text-dim);
 }
 
+.settings-link {
+  align-self: flex-end;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
 .fit-picker {
   display: flex;
   gap: 0.4rem;
@@ -354,4 +360,108 @@ body {
   border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
   border-radius: 0.5rem;
   font-size: 0.9rem;
+}
+
+/* ---------- Startseite: eine Adresse, hinter der alle Bildschirme liegen ---------- */
+
+.hub {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: max(2rem, env(safe-area-inset-top)) 1rem 3rem;
+}
+
+.hub-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+}
+
+.hub-header p {
+  margin: 0.25rem 0 0;
+  color: var(--text-dim);
+}
+
+.hub-section {
+  margin-top: 1.75rem;
+}
+
+.hub-section h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+}
+
+.hub-card {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  padding: 0.9rem 1rem;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.hub-card-primary {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.hub-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--accent);
+  background: var(--surface-raised);
+  border-radius: 0.55rem;
+}
+
+.hub-card-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.hub-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.hub-card-detail {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Zeigt auf einen Blick, ob an diesem Ausgabeziel wirklich ein Gerät hängt. */
+.dot {
+  flex: 0 0 auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.dot-on {
+  background: var(--good);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
