@@ -46,6 +46,13 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+tasks.bootRun {
+    // Ohne das startet bootRun im Verzeichnis backend/, und der Vorgabepfad ./data/library aus der
+    // application.yaml zeigt auf backend/data/library — also ins Leere. Die Bibliothek liegt im
+    // Wurzelverzeichnis des Projekts, genau dort, wo die Anleitung sie erwartet.
+    workingDir = rootProject.projectDir
+}
+
 // ---------------------------------------------------------------------------
 // Frontend
 //
